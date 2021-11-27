@@ -1,0 +1,26 @@
+{
+  "name": "discordchannelbot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Flittis/DiscordChannelBot.git"
+  },
+  "author": "Flittis",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Flittis/DiscordChannelBot/issues"
+  },
+  "homepage": "https://github.com/Flittis/DiscordChannelBot#readme",
+  "dependencies": {
+    "@discordjs/rest": "^0.1.0-canary.0",
+    "discord-api-types": "^0.24.0",
+    "discord.js": "^13.3.1",
+    "mongoose": "^6.0.13"
+  }
+}
