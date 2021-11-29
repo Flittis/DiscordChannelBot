@@ -9,7 +9,7 @@ let ChannelController = {
         console.log(`Logged in as ${Bot.user.tag}!`);
 
         Bot.EveryoneRole = (await Bot.guilds?.fetch(Config.SERVER_ID)).roles.everyone;
-        // ChannelController.createButtons();
+        ChannelController.createButtons();
     },
     voiceStateUpdate: async (oldState, newState) => {
         try {
@@ -22,18 +22,12 @@ let ChannelController = {
                     type: 'GUILD_VOICE',
                     parent: Config.CATEGORY_CREATE_ID,
                     userLimit: 1,
-                    permissionOverwrites: [
-                        {
-                            id: User.id,
-                            allow: ['ADMINISTRATOR', 'MANAGE_GUILD', 'MANAGE_CHANNELS', 'CREATE_INSTANT_INVITE', 'VIEW_CHANNEL', 'MUTE_MEMBERS', 'DEAFEN_MEMBERS']
-                        },
-                        {
-                            id: Bot.EveryoneRole.id,
-                            deny: [ 'VIEW_CHANNEL' ]
-                        }
-                    ]
+                    lockPermissions: 1
                 })
 
+                await Channel.permissionOverwrites.edit( User.id, { 'VIEW_CHANNEL': true })
+                await Channel.permissionOverwrites.edit( Bot.EveryoneRole.id, { 'VIEW_CHANNEL': false })
+                
                 Self.channel = { channel_id: Channel.id, title: User.username, isPublic: false, userLimit: 1 }
                 await Self.save();
 
@@ -55,14 +49,14 @@ let ChannelController = {
     createButtons: async () => {
         try {
             const embed = new MessageEmbed()
-                .setColor('#0099ff')
-                .setTitle('Управление приватным каналом')
-                .setDescription('Для [создания](https://discord.gg/xYbQQwZBzd) личного голосового канала, у вас должна быть роль ${tempVars("playerrole")}, которую можно получить, подключив учетную запись Discord в [настройках](https://cybershoke.net/profile/me/settings/connections) профиля. Для выдачи роли, в вашем CYBERSHOKE профиле должно быть 50+ часов игрового времени.\n\n**Запуск мини-игры или YouTube в голосовом канале:**\n— Вам потребуется нажать ${ tempVars("em-plus") } в чате ${ tempVars("obch") }, и выбрать ${ tempVars("em-slash") } `Использовать слэш-команду`, ${ tempVars("em-activity") } `/activity`')
-                .setFooter('Нажмите на кнопки ниже, чтобы поменять настройки канала. Кнопки активны, когда вы находитесь в своём приватном канале.')
+                .setColor('#4f545c')
+                .setTitle(Config.COMMANDS_MESSAGE_TITLE)
+                .setDescription(Config.COMMANDS_MESSAGE)
+                .setFooter(Config.COMMANDS_MESSAGE_FOOTER)
 
 
-            let _row1 = new MessageActionRow().addComponents( Config.BUTTONS[0].map((el) => new MessageButton().setCustomId(el.id).setLabel(el.label).setStyle('SECONDARY')) );
-            let _row2 = new MessageActionRow().addComponents( Config.BUTTONS[1].map((el) => new MessageButton().setCustomId(el.id).setLabel(el.label).setStyle('SECONDARY')) );
+            let _row1 = new MessageActionRow().addComponents( Config.BUTTONS[0].map((el) => new MessageButton().setCustomId(el.id).setEmoji(el.emoji).setStyle('SECONDARY')) );
+            let _row2 = new MessageActionRow().addComponents( Config.BUTTONS[1].map((el) => new MessageButton().setCustomId(el.id).setEmoji(el.emoji).setStyle('SECONDARY')) );
 
             (await (await Bot.guilds.fetch(Config.SERVER_ID)).channels.fetch(Config.CHANNEL_COMMANDS_ID)).send({ embeds: [embed], components: [_row1, _row2] });
         } catch(e) {
@@ -110,14 +104,8 @@ let ChannelController = {
 
                     var Channel = await msg.guild?.channels?.fetch(Self.channel.channel_id);
 
-                    await Channel.edit({
-                        permissionOverwrites: [
-                            {
-                                id: msg.mentions.users.first().id,
-                                deny: ['VIEW_CHANNEL']
-                            }
-                        ]
-                    })
+                    Channel.members.filter(usr => usr.id == msg.mentions.users.first().id)?.first()?.voice?.setChannel('911395605048352845')
+                    await Channel.permissionOverwrites.edit(msg.mentions.users.first().id, { 'VIEW_CHANNEL': false })
 
                     embed = new MessageEmbed()
                         .setColor('#0099ff')
@@ -129,14 +117,7 @@ let ChannelController = {
 
                     var Channel = await msg.guild?.channels?.fetch(Self.channel.channel_id);
 
-                    await Channel.edit({
-                        permissionOverwrites: [
-                            {
-                                id: msg.mentions.users.first().id,
-                                allow: ['VIEW_CHANNEL']
-                            }
-                        ]
-                    })
+                    await Channel.permissionOverwrites.edit(msg.mentions.users.first().id, { 'VIEW_CHANNEL': true })
 
                     embed = new MessageEmbed()
                         .setColor('#0099ff')
@@ -158,7 +139,7 @@ let ChannelController = {
             
             setTimeout(async () => {
                 (await msg.channel.messages.fetch()).forEach((_msg) => {
-                    if (_msg.id != '913154982407200779') _msg.delete().catch(() => { console.error(`Unable to delete ${_msg.id}`) })
+                    if (_msg.id != Config.COMMANDS_MESSAGE_ID) _msg.delete().catch(() => { console.error(`Unable to delete ${_msg.id}`) })
                 })
             }, 3000)
         } catch(e) {
@@ -193,14 +174,7 @@ let ChannelController = {
                 case 'editClose':
                     var Channel = await msg.guild?.channels?.fetch(Self.channel.channel_id);
 
-                    await Channel.edit({ 
-                        permissionOverwrites: [
-                            {
-                                id: Bot.EveryoneRole.id,
-                                deny: ['VIEW_CHANNEL']
-                            }
-                        ]
-                    })
+                    await Channel.permissionOverwrites.edit(Bot.EveryoneRole.id, { 'VIEW_CHANNEL': false })
 
                     embed = new MessageEmbed()
                         .setColor('#0099ff')
@@ -210,14 +184,7 @@ let ChannelController = {
                 case 'editOpen':
                     var Channel = await msg.guild?.channels?.fetch(Self.channel.channel_id);
 
-                    await Channel.edit({
-                        permissionOverwrites: [
-                            {
-                                id: Bot.EveryoneRole.id,
-                                allow: ['VIEW_CHANNEL']
-                            }
-                        ]
-                    });
+                    await Channel.permissionOverwrites.edit(Bot.EveryoneRole.id, { 'VIEW_CHANNEL': true })
 
                     embed = new MessageEmbed()
                         .setColor('#0099ff')
