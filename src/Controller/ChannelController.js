@@ -1,5 +1,5 @@
 import { MessageActionRow, MessageButton, MessageEmbed } from 'discord.js'
-import { Bot } from '../../index.js'    
+import { Bot } from '../../index.js'
 
 import Config from '../Config.js';
 import UserController from './UserController.js';
@@ -18,7 +18,7 @@ let ChannelController = {
                     Member = await newState.guild.members.fetch(User),
                     Self = await UserController.get(User);
 
-                let Channel = await newState.guild.channels.create(`${Config.ICONS.CLOSED_CHANNEL}${Config.ICONS.VOICE_CHANNEL} ┆ ${User.username}`, {
+                let Channel = await newState.guild.channels.create(`${Config.ICONS.VOICE_CHANNEL} ┆ ${User.username}`, {
                     type: 'GUILD_VOICE',
                     parent: Config.CATEGORY_CREATE_ID,
                     userLimit: 1,
@@ -27,7 +27,7 @@ let ChannelController = {
 
                 await Channel.permissionOverwrites.edit( User.id, { 'VIEW_CHANNEL': true })
                 await Channel.permissionOverwrites.edit( Bot.EveryoneRole.id, { 'VIEW_CHANNEL': false })
-                
+
                 Self.channel = { channel_id: Channel.id, title: User.username, isPublic: false, userLimit: 1 }
                 await Self.save();
 
@@ -39,12 +39,12 @@ let ChannelController = {
 
                 if (oldState.channelId == Self.channel.channel_id) {
                     oldState.channel.delete();
-                    
+
                     Self.channel = undefined;
                     Self.state = null;
                     Self.stateMessageId = null;
                     Self.save();
-                } 
+                }
             }
         } catch (e) {
             console.error(e);
@@ -131,8 +131,8 @@ let ChannelController = {
                         .setDescription(`Вы разблокировали пользователя **${msg.mentions.users.first().username}** в канале`);
 
                     break;
-            }    
-            
+            }
+
             if(!embed) return;
 
             let MSGID = Self.stateMessageId;
@@ -141,7 +141,7 @@ let ChannelController = {
             Self.state = '';
             Self.stateMessageId = 0;
             await Self.save();
-            
+
             setTimeout(async () => {
                 (await msg.channel.messages.fetch()).forEach((_msg) => {
                     if (_msg.id != Config.COMMANDS_MESSAGE_ID) _msg?.delete().catch(() => { console.error(`Unable to delete ${_msg.id}`) })
@@ -155,7 +155,7 @@ let ChannelController = {
         if (!msg.isButton() || !msg.customId || msg?.channelId != Config.CHANNEL_COMMANDS_ID) return;
 
         await msg.deferReply({ ephemeral: true })
-        
+
         try {
             let Self = await UserController.get(msg.user);
 
@@ -181,8 +181,6 @@ let ChannelController = {
 
                     await Channel.permissionOverwrites.edit(Bot.EveryoneRole.id, { 'VIEW_CHANNEL': false })
 
-                    Self.channel.isPublic = false;
-
                     embed = new MessageEmbed()
                         .setColor('#0099ff')
                         .setDescription(`<@${msg.user.id}>, вы сделали канал закрытым. Он скрыт, и не будет виден в списке другим пользователям. `);
@@ -192,8 +190,6 @@ let ChannelController = {
                     var Channel = await msg.guild?.channels?.fetch(Self.channel.channel_id);
 
                     await Channel.permissionOverwrites?.edit(Bot.EveryoneRole.id, { 'VIEW_CHANNEL': true })
-
-                    Self.channel.isPublic = true;
 
                     embed = new MessageEmbed()
                         .setColor('#0099ff')
@@ -218,7 +214,7 @@ let ChannelController = {
 
             let _msg = await msg.editReply({ embeds: [embed], ephemeral: true });
 
-            if(['editOpen', 'editClose'].includes(msg.customId)) 
+            if(['editOpen', 'editClose'].includes(msg.customId))
                 return setTimeout(async () => _msg.delete().catch(() => { console.error(`Unable to delete ${_msg.id}`) }), 3000)
 
             Self.state = msg.customId;
