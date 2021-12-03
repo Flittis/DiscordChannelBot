@@ -14,6 +14,15 @@ let UserController = {
         }
 
         resolve(Self);
+    })},
+    getChannel: channel_id => { return new Promise(async (resolve, reject) => {
+        if (!channel_id) reject(null);
+
+        let Self = await User.findOne({ 'channel.channel_id': channel_id }).exec();
+
+        if(!Self) reject(null);
+
+        resolve(Self);
     })}
 } 
 

@@ -25,26 +25,25 @@ let ChannelController = {
                     lockPermissions: 1
                 })
 
-                await Channel.permissionOverwrites.edit( User.id, { 'VIEW_CHANNEL': true })
-                await Channel.permissionOverwrites.edit( Bot.EveryoneRole.id, { 'VIEW_CHANNEL': false })
+                Channel.permissionOverwrites.edit( User.id, { 'VIEW_CHANNEL': true })
+                Channel.permissionOverwrites.edit( Bot.EveryoneRole.id, { 'VIEW_CHANNEL': false })
 
                 Self.channel = { channel_id: Channel.id, title: User.username, isPublic: false, userLimit: 1 }
-                await Self.save();
+                Self.save();
 
                 Member.voice.setChannel(Channel);
             } else if (oldState?.channel && oldState.channel?.id != Config.CHANNEL_CREATE_ID && oldState.channel?.parentId == Config.CATEGORY_CREATE_ID) {
                 if(oldState?.channel?.id == newState?.channel?.id) return;
+                if(oldState?.channel?.members?.first()) return;
 
-                let Self = await UserController.get({ id: oldState.id });
+                let Self = await UserController.getChannel( oldState.channel.id );
 
-                if (oldState.channelId == Self.channel.channel_id) {
-                    oldState.channel.delete();
+                oldState.channel.delete();
 
-                    Self.channel = undefined;
-                    Self.state = null;
-                    Self.stateMessageId = null;
-                    Self.save();
-                }
+                Self.channel = undefined;
+                Self.state = null;
+                Self.stateMessageId = null;
+                Self.save();
             }
         } catch (e) {
             console.error(e);
