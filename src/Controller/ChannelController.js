@@ -18,7 +18,7 @@ let ChannelController = {
                     Member = await newState.guild.members.fetch(User),
                     Self = await UserController.get(User);
 
-                let Channel = await newState.guild.channels.create(`${Config.ICONS.VOICE_CHANNEL} ┆ ${User.username}`, {
+                let Channel = await newState.guild.channels.create(`${Config.ICONS.VOICE_CHANNEL}┆${User.username}`, {
                     type: 'GUILD_VOICE',
                     parent: Config.CATEGORY_CREATE_ID,
                     userLimit: 1,
@@ -36,13 +36,14 @@ let ChannelController = {
                 if(oldState?.channel?.id == newState?.channel?.id) return;
                 if(oldState?.channel?.members?.first()) return;
 
-                let Self = await UserController.getChannel( oldState.channel.id );
-
                 oldState.channel.delete();
+
+                let Self = await UserController.getChannel( oldState.channel.id );
 
                 Self.channel = undefined;
                 Self.state = null;
                 Self.stateMessageId = null;
+                Self.lastTitleEdit = null;
                 Self.save();
             }
         } catch (e) {
@@ -73,7 +74,7 @@ let ChannelController = {
         try {
             let Self = await UserController.get(msg.author);
 
-            msg.delete().catch(err => console.error(`Can't delete message ` + msg.id));
+            msg.delete().catch(() => { console.error(`Unable to delete ${_msg.id}`) })
 
             if (!Self || !Self.channel?.channel_id || Self.state == '') return;
 
@@ -81,11 +82,13 @@ let ChannelController = {
 
             switch(Self.state) {
                 case 'editTitle':
-                    if (!msg.content) return msg.delete();
-                    if (msg.content.length > 40) return msg.delete();
+                    if (!msg.content) return;
+                    if (msg.content.length > 40) return;
 
                     var Channel = await msg.guild?.channels?.fetch(Self.channel.channel_id);
-                    await Channel.edit({ name: `${Config.ICONS.VOICE_CHANNEL} ┆ ${msg.content}` });
+                    Channel.edit({ name: `${Config.ICONS.VOICE_CHANNEL}┆${msg.content}` });
+
+                    Self.lastTitleEdit = Date.now();
 
                     embed = new MessageEmbed()
                         .setColor('#0099ff')
@@ -93,12 +96,12 @@ let ChannelController = {
 
                     break;
                 case 'editLimit':
-                    if (parseInt(msg.content) === undefined) return msg.delete();
-                    if (parseInt(msg.content) < 0) return msg.delete();
+                    if (parseInt(msg.content) === undefined) return;
+                    if (parseInt(msg.content) < 0) return;
                     if (parseInt(msg.content) > 99) msg.content = '0';
 
                     var Channel = await msg.guild?.channels?.fetch(Self.channel.channel_id);
-                    let Edit = await Channel.edit({ userLimit: parseInt(msg.content) });
+                    Channel.edit({ userLimit: parseInt(msg.content) });
 
                     embed = new MessageEmbed()
                         .setColor('#0099ff')
@@ -106,12 +109,12 @@ let ChannelController = {
 
                     break;
                 case 'editUserBlock':
-                    if (!msg.mentions?.users?.first()) return msg.delete();
+                    if (!msg.mentions?.users?.first()) return;
 
                     var Channel = await msg.guild?.channels?.fetch(Self.channel.channel_id);
 
                     Channel.members.filter(usr => usr.id == msg.mentions.users.first().id)?.first()?.voice?.setChannel('813761392099459154')
-                    await Channel.permissionOverwrites.edit(msg.mentions.users.first().id, { 'VIEW_CHANNEL': false })
+                    Channel.permissionOverwrites.edit(msg.mentions.users.first().id, { 'VIEW_CHANNEL': false })
 
                     embed = new MessageEmbed()
                         .setColor('#0099ff')
@@ -119,11 +122,11 @@ let ChannelController = {
 
                     break;
                 case 'editUserUnblock':
-                    if (!msg.mentions?.users?.first()) return msg.delete();
+                    if (!msg.mentions?.users?.first()) return;
 
                     var Channel = await msg.guild?.channels?.fetch(Self.channel.channel_id);
 
-                    await Channel.permissionOverwrites.edit(msg.mentions.users.first().id, { 'VIEW_CHANNEL': true })
+                    Channel.permissionOverwrites.edit(msg.mentions.users.first().id, { 'VIEW_CHANNEL': true })
 
                     embed = new MessageEmbed()
                         .setColor('#0099ff')
@@ -136,7 +139,7 @@ let ChannelController = {
 
             let MSGID = Self.stateMessageId;
 
-            (await msg.channel.messages.fetch(MSGID))?.edit({ embeds: [ embed ] }).catch(err => console.error(`Can't edit message ` + MSGID))
+            (await msg.channel.messages.fetch(MSGID))?.edit({ embeds: [ embed ] }).catch(err => console.error(`Unable to edit message ` + MSGID))
             Self.state = '';
             Self.stateMessageId = 0;
             await Self.save();
@@ -164,6 +167,11 @@ let ChannelController = {
 
             switch(msg.customId) {
                 case 'editTitle':
+                    console.log(Date.now(), Self.lastTitleEdit, Date.now() - Self.lastTitleEdit)
+                    let Difference = Date.now() - Self.lastTitleEdit;
+
+                    if(Difference < 300 * 1000) return msg.editReply(`Вы сможете изменить название через ${(300 - Math.floor(Difference / 1000))} секунд`);
+
                     embed = new MessageEmbed()
                         .setColor('#0099ff')
                         .setDescription(`<@${msg.user.id}>, введите новое название канала в диапазоне от 1 до 40 символов`);
@@ -178,7 +186,7 @@ let ChannelController = {
                 case 'editClose':
                     var Channel = await msg.guild?.channels?.fetch(Self.channel.channel_id);
 
-                    await Channel.permissionOverwrites.edit(Bot.EveryoneRole.id, { 'VIEW_CHANNEL': false })
+                    Channel.permissionOverwrites.edit(Bot.EveryoneRole.id, { 'VIEW_CHANNEL': false })
 
                     embed = new MessageEmbed()
                         .setColor('#0099ff')
@@ -188,7 +196,7 @@ let ChannelController = {
                 case 'editOpen':
                     var Channel = await msg.guild?.channels?.fetch(Self.channel.channel_id);
 
-                    await Channel.permissionOverwrites?.edit(Bot.EveryoneRole.id, { 'VIEW_CHANNEL': true })
+                    Channel.permissionOverwrites?.edit(Bot.EveryoneRole.id, { 'VIEW_CHANNEL': true })
 
                     embed = new MessageEmbed()
                         .setColor('#0099ff')
