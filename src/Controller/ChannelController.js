@@ -167,7 +167,6 @@ let ChannelController = {
 
             switch(msg.customId) {
                 case 'editTitle':
-                    console.log(Date.now(), Self.lastTitleEdit, Date.now() - Self.lastTitleEdit)
                     let Difference = Date.now() - Self.lastTitleEdit;
 
                     if(Difference < 300 * 1000) return msg.editReply(`Вы сможете изменить название через ${(300 - Math.floor(Difference / 1000))} секунд`);
