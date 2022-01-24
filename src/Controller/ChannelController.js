@@ -1,8 +1,10 @@
 import { MessageActionRow, MessageButton, MessageEmbed } from 'discord.js'
 import { Bot } from '../../index.js'
 
-import Config from '../Config.js';
-import UserController from './UserController.js';
+import Config from '../Config.js'
+import Variables from '../Variables.js'
+
+import UserController from './UserController.js'
 
 let ChannelController = {
     onReady: async () => {
@@ -18,7 +20,7 @@ let ChannelController = {
                     Member = await newState.guild.members.fetch(User),
                     Self = await UserController.get(User);
 
-                let Channel = await newState.guild.channels.create(`${Config.ICONS.VOICE_CHANNEL}┆${User.username}`, {
+                let Channel = await newState.guild.channels.create(`${Variables.ICONS.VOICE_CHANNEL}┆${User.username}`, {
                     type: 'GUILD_VOICE',
                     parent: Config.CATEGORY_CREATE_ID,
                     userLimit: 1,
@@ -54,9 +56,9 @@ let ChannelController = {
         try {
             const embed = new MessageEmbed()
                 .setColor('#4f545c')
-                .setTitle(Config.COMMANDS_MESSAGE_TITLE)
-                .setDescription(Config.COMMANDS_MESSAGE)
-                .setFooter(Config.COMMANDS_MESSAGE_FOOTER)
+                .setTitle(Variables.COMMANDS_MESSAGE_TITLE)
+                .setDescription(Variables.COMMANDS_MESSAGE)
+                .setFooter(Variables.COMMANDS_MESSAGE_FOOTER)
 
 
             let _row1 = new MessageActionRow().addComponents( Config.BUTTONS[0].map((el) => new MessageButton().setCustomId(el.id).setEmoji(el.emoji).setStyle('SECONDARY')) );
@@ -74,7 +76,7 @@ let ChannelController = {
         try {
             let Self = await UserController.get(msg.author);
 
-            msg.delete().catch(() => { console.error(`Unable to delete ${_msg.id}`) })
+            msg.delete().catch((_msg) => { console.error(`Unable to delete ${_msg.id}`) })
 
             if (!Self || !Self.channel?.channel_id || Self.state == '') return;
 
@@ -86,7 +88,7 @@ let ChannelController = {
                     if (msg.content.length > 40) return;
 
                     var Channel = await msg.guild?.channels?.fetch(Self.channel.channel_id);
-                    Channel.edit({ name: `${Config.ICONS.VOICE_CHANNEL}┆${msg.content}` });
+                    Channel.edit({ name: `${Variables.ICONS.VOICE_CHANNEL}┆${msg.content}` });
 
                     Self.lastTitleEdit = Date.now();
 
