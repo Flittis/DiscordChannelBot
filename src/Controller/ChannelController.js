@@ -61,8 +61,8 @@ let ChannelController = {
                 .setFooter(Variables.COMMANDS_MESSAGE_FOOTER)
 
 
-            let _row1 = new MessageActionRow().addComponents( Config.BUTTONS[0].map((el) => new MessageButton().setCustomId(el.id).setEmoji(el.emoji).setStyle('SECONDARY')) );
-            let _row2 = new MessageActionRow().addComponents( Config.BUTTONS[1].map((el) => new MessageButton().setCustomId(el.id).setEmoji(el.emoji).setStyle('SECONDARY')) );
+            let _row1 = new MessageActionRow().addComponents( Variables.BUTTONS[0].map((el) => new MessageButton().setCustomId(el.id).setEmoji(el.emoji).setStyle('SECONDARY')) );
+            let _row2 = new MessageActionRow().addComponents( Variables.BUTTONS[1].map((el) => new MessageButton().setCustomId(el.id).setEmoji(el.emoji).setStyle('SECONDARY')) );
 
             (await (await Bot.guilds.fetch(Config.SERVER_ID)).channels.fetch(Config.CHANNEL_COMMANDS_ID)).send({ embeds: [embed], components: [_row1, _row2] });
         } catch(e) {
@@ -221,9 +221,6 @@ let ChannelController = {
             if(!embed) return;
 
             let _msg = await msg.editReply({ embeds: [embed], ephemeral: true });
-
-            if(['editOpen', 'editClose'].includes(msg.customId))
-                return setTimeout(async () => _msg.delete().catch(() => { console.error(`Unable to delete ${_msg.id}`) }), 3000)
 
             Self.state = msg.customId;
             Self.stateMessageId = _msg.id;

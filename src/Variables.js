@@ -7,7 +7,7 @@ let Variables = {
         'slash': '<:slash:911975946616209408>',
         'activity': '<:activity:911978379778072616>',
         'community_name': '<:community_name:914875641680261150>',
-        'community_limit': '<:community_limit:914875641705402428>',
+        'community_limit': '<:community_limit:917138492113448970>',
         'community_hide': '<:community_hide:914875641843810314>',
         'community_unlock': '<:community_unlock:914875641688637482>',
         'community_ban': '<:community_ban:914875641692839936>',
